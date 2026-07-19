@@ -1,0 +1,54 @@
+/*
+ * Smallest Subsequence of Distinct Characters
+ * Difficulty: Medium
+ * 
+ * Given a string s, return the lexicographically smallest subsequence of s that contains all the distinct characters of s exactly once.
+
+ 
+Example 1:
+
+Input: s = "bcabc"
+Output: "abc"
+
+
+Example 2:
+
+Input: s = "cbacdcbc"
+Output: "acdb"
+
+
+ 
+Constraints:
+
+
+	1 <= s.length <= 1000
+	s consists of lowercase English letters.
+
+
+ 
+Note: This question is the same as 316: https://leetcode.com/problems/remove-duplicate-letters/
+ */
+
+from collections import Counter
+class Solution:
+    def smallestSubsequence(self, s: str) -> str:
+        n = len(s)
+        remaining = Counter(s)   # remaining count of each char from here on
+        sol = []                 # stack — can be popped, unlike a plain string
+        onStack = set()
+
+        for i in range(n):
+            char = s[i]
+            remaining[char] -= 1   # this occurrence is used up
+
+            if char in onStack:
+                continue
+
+            # pop worse chars off the stack as long as they still appear later
+            while sol and sol[-1] > char and remaining[sol[-1]] > 0:
+                onStack.discard(sol.pop())
+
+            sol.append(char)
+            onStack.add(char)
+
+        return ''.join(sol)
