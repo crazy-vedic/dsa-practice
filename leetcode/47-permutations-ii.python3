@@ -1,0 +1,62 @@
+/*
+ * Permutations II
+ * Difficulty: Medium
+ * 
+ * Given a collection of numbers, nums, that might contain duplicates, return all possible unique permutations in any order.
+
+ 
+Example 1:
+
+Input: nums = [1,1,2]
+Output:
+[[1,1,2],
+ [1,2,1],
+ [2,1,1]]
+
+
+Example 2:
+
+Input: nums = [1,2,3]
+Output: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+
+
+ 
+Constraints:
+
+
+	1 <= nums.length <= 8
+	-10 <= nums[i] <= 10
+
+
+ */
+
+from collections import Counter
+class Solution:
+    def permuteUnique(self, nums: List[int]) -> List[List[int]]:
+        n=len(nums)
+        sol=[]
+        ctr=  Counter(nums)
+        st=set(nums)
+        if n<=1:
+            return [nums]
+        sol = self.backtrack( [ [i] for i in range(n) ], nums, 0, n)
+        print(sol)
+        actualSol=[]
+        for arr in sol:
+            attempt = [nums[i] for i in arr]
+            if not attempt in actualSol: actualSol.append( [nums[i] for i in arr] )
+        return actualSol
+    
+    def backtrack(self,sols,arr,cnt,n):
+        cnt+=1
+        if cnt==n:
+            return sols
+        newSols=[]
+        print(sols)
+        for i in range(len(sols)):
+            for j in range(n):
+                if sols[i].count(j)>0:
+                    pass
+                else:
+                    newSols.append( sols[i] + [j] )
+        return self.backtrack(newSols,arr,cnt,n)
