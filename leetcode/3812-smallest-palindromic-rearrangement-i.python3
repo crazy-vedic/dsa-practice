@@ -1,0 +1,90 @@
+/*
+ * Smallest Palindromic Rearrangement I
+ * Difficulty: Medium
+ * 
+ * You are given a palindromic string s.
+
+Return the lexicographically smallest palindromic permutation of s.
+
+ 
+Example 1:
+
+
+Input: s = "z"
+
+Output: "z"
+
+Explanation:
+
+A string of only one character is already the lexicographically smallest palindrome.
+
+
+Example 2:
+
+
+Input: s = "babab"
+
+Output: "abbba"
+
+Explanation:
+
+Rearranging "babab" → "abbba" gives the smallest lexicographic palindrome.
+
+
+Example 3:
+
+
+Input: s = "daccad"
+
+Output: "acddca"
+
+Explanation:
+
+Rearranging "daccad" → "acddca" gives the smallest lexicographic palindrome.
+
+
+ 
+Constraints:
+
+
+	1 <= s.length <= 105
+	s consists of lowercase English letters.
+	s is guaranteed to be palindromic.
+
+
+ */
+
+from collections import Counter
+class Solution:
+    def smallestPalindrome(self, s: str) -> str:
+        ctr= Counter(s)
+        n=len(s)
+        keys = list(sorted(ctr.keys()))
+
+
+        odd= [ k for k,v in ctr.items() if v%2]
+        odd = odd[0] if len(odd) else ''
+        
+        print(ctr, keys,odd)
+
+        if odd in keys and ctr[odd]==1:
+            keys.remove(odd)
+            ctr.subtract({odd:1})
+
+        ans = ''
+        tempCtr = Counter({ k:v//2 for k,v in ctr.items() })
+        while keys:
+            ele = keys[0]
+            count = tempCtr[ele]
+            if count > 0:
+                ans += ele
+            else:
+                keys.remove(ele)
+            tempCtr.subtract({ele:1})
+
+        # ans += ''.join(keys)
+        ans += str(odd) + ans[::-1]
+        # keys.reverse()
+        # ans += ''.join(keys)
+
+        return ans
