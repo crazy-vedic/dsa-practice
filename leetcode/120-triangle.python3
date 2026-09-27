@@ -1,0 +1,77 @@
+/*
+ * Triangle
+ * Difficulty: Medium
+ * 
+ * Given a triangle array, return the minimum path sum from top to bottom.
+
+For each step, you may move to an adjacent number of the row below. More formally, if you are on index i on the current row, you may move to either index i or index i + 1 on the next row.
+
+ 
+Example 1:
+
+Input: triangle = [[2],[3,4],[6,5,7],[4,1,8,3]]
+Output: 11
+Explanation: The triangle looks like:
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+The minimum path sum from top to bottom is 2 + 3 + 5 + 1 = 11 (underlined above).
+
+
+Example 2:
+
+Input: triangle = [[-10]]
+Output: -10
+
+
+ 
+Constraints:
+
+
+	1 <= triangle.length <= 200
+	triangle[0].length == 1
+	triangle[i].length == triangle[i - 1].length + 1
+	-104 <= triangle[i][j] <= 104
+
+
+ 
+Follow up: Could you do this using only O(n) extra space, where n is the total number of rows in the triangle?
+ */
+
+import heapq
+class Solution:
+    def minimumTotal(self, triangle: list[list[int]]) -> int:
+        # state (cost , level , index)
+        class node:
+            def __init__(self,c,l,i):
+                self.cost,self.level,self.index=c,l,i
+            def __lt__(self, other):
+                return self.cost < other.cost
+            def __iter__(self):
+                yield self.cost
+                yield self.level
+                yield self.index
+        n=len(triangle)
+        states = [ node(triangle[0][0], 0 , 0) ]
+        sols=set()
+        visited={}
+        while states:
+            # print([tuple(state) for state in states])
+            curr = heapq.heappop(states)
+            c,l,i = curr
+            index = (l,i)
+            if index in visited and c>=visited[index]:
+                continue
+            else:
+                visited[index] = c
+            if curr.level==n-1:
+                sols.add(curr.cost)
+                # return curr.cost
+            else:
+                left = node( curr.cost+triangle[l+1][i] , l+1, i )
+                if i < l+2: 
+                    right = node( curr.cost+triangle[l+1][i+1] , l+1, i+1 )
+                    heapq.heappush (states,right)
+                heapq.heappush (states,left)
+        return min(sols)
