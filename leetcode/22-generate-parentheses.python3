@@ -1,0 +1,39 @@
+/*
+ * Generate Parentheses
+ * Difficulty: Medium
+ * 
+ * Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+
+ 
+Example 1:
+Input: n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+Example 2:
+Input: n = 1
+Output: ["()"]
+
+ 
+Constraints:
+
+
+	1 <= n <= 8
+
+
+ */
+
+class Solution:
+    def generateParenthesis(self, n: int) -> list[str]:
+        opened,closed=0,0
+        ans=[]
+        def dfs(curr,curropen,currclose):
+            print(curr,curropen,currclose)
+            if curropen == n and currclose == n:
+                return [curr]
+            sol=[]
+            if currclose>curropen or currclose>n or curropen>n:
+                return []
+            if curropen>currclose:
+                sol.extend(dfs(curr+')',curropen,currclose+1))
+            sol.extend(dfs(curr+'(',curropen+1,currclose))
+            return sol
+        return dfs('',0,0)
