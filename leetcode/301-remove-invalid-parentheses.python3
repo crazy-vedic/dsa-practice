@@ -1,0 +1,89 @@
+/*
+ * Remove Invalid Parentheses
+ * Difficulty: Hard
+ * 
+ * Given a string s that contains parentheses and letters, remove the minimum number of invalid parentheses to make the input string valid.
+
+Return a list of unique strings that are valid with the minimum number of removals. You may return the answer in any order.
+
+ 
+Example 1:
+
+Input: s = "()())()"
+Output: ["(())()","()()()"]
+
+
+Example 2:
+
+Input: s = "(a)())()"
+Output: ["(a())()","(a)()()"]
+
+
+Example 3:
+
+Input: s = ")("
+Output: [""]
+
+
+ 
+Constraints:
+
+
+	1 <= s.length <= 25
+	s consists of lowercase English letters and parentheses '(' and ')'.
+	There will be at most 20 parentheses in s.
+
+
+ */
+
+from dataclasses import dataclass, field, replace
+from collections import deque,defaultdict
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        @dataclass
+        class State:
+            # stk: list = field(default_factory=list)
+            index: int = 0 #Next to be done index
+            removed: int = 0
+            opens: int = 0
+            ans: str = ''
+            def __iter__(self):
+                return iter((self.index, self.removed, self.opens, self.ans))
+            def __repr__(self):
+                return str((self.index, self.removed, self.opens, self.ans))
+        n=len(s)
+        sol=defaultdict(lambda: [])
+        minsol=99
+        states = deque([State()])
+        closedSuffix=[]
+        curr=0
+        for i in range(n-1,-1,-1):
+            if s[i]==')': curr+=1
+            closedSuffix.append(curr)
+        closedSuffix.reverse()
+        print(closedSuffix)
+        while states:
+            state=states.popleft()
+            # print(state)
+            index,removed,opens,ans = state
+            if index==n:
+                if opens==0:
+                    sol[removed].append(ans)
+                    minsol=min(minsol,removed)
+                continue
+            ch=s[index]
+            if ch=='(':
+                #Take
+                if opens-5 < closedSuffix[index]: states.appendleft( replace(state, index=index+1,opens=opens+1,ans=ans+'(') )
+                #Dont take
+                if removed<minsol: states.appendleft( replace(state, index=index+1,removed=removed+1) )
+            elif ch==')':
+                #Take
+                if opens>=1:
+                    states.appendleft( replace(state, index=index+1, opens=opens-1,ans=ans+')') )
+                #Don't take
+                if removed<minsol: states.appendleft( replace(state, index=index+1, removed=removed+1 ) )
+            else:
+                states.appendleft ( replace (state, index=index+1,ans=ans+ch))
+        # print(dict(sol))
+        return list(set(sol[min(sol)]))
