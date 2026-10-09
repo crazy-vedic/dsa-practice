@@ -1,0 +1,96 @@
+/*
+ * Design Add and Search Words Data Structure
+ * Difficulty: Medium
+ * 
+ * Design a data structure that supports adding new words and finding if a string matches any previously added string.
+
+Implement the WordDictionary class:
+
+
+	WordDictionary() Initializes the object.
+	void addWord(word) Adds word to the data structure, it can be matched later.
+	bool search(word) Returns true if there is any string in the data structure that matches word or false otherwise. word may contain dots '.' where dots can be matched with any letter.
+
+
+ 
+Example:
+
+Input
+["WordDictionary","addWord","addWord","addWord","search","search","search","search"]
+[[],["bad"],["dad"],["mad"],["pad"],["bad"],[".ad"],["b.."]]
+Output
+[null,null,null,null,false,true,true,true]
+
+Explanation
+WordDictionary wordDictionary = new WordDictionary();
+wordDictionary.addWord("bad");
+wordDictionary.addWord("dad");
+wordDictionary.addWord("mad");
+wordDictionary.search("pad"); // return False
+wordDictionary.search("bad"); // return True
+wordDictionary.search(".ad"); // return True
+wordDictionary.search("b.."); // return True
+
+
+ 
+Constraints:
+
+
+	1 <= word.length <= 25
+	word in addWord consists of lowercase English letters.
+	word in search consist of '.' or lowercase English letters.
+	There will be at most 2 dots in word for search queries.
+	At most 104 calls will be made to addWord and search.
+
+
+ */
+
+from collections import defaultdict
+class Trie:
+    def __init__(self,end=False):
+        self.children= defaultdict(lambda: Trie())
+        self.end=end
+    def insert(self,word):
+        if not word: 
+            self.end=True
+        else:
+            self.children[word[0]].insert(word[1::])
+
+class WordDictionary:
+
+    def __init__(self):
+        self.trie = Trie()
+        self.lengths = set()
+
+    def addWord(self, word: str) -> None:
+        self.trie.insert(word)
+        self.lengths.add(len(word))
+
+    def search(self, word: str) -> bool:
+        n=len(word)
+        if not n in self.lengths: return False
+        curr = [(self.trie,0)]
+        while curr:
+            trie,currIndex = curr.pop(-1)
+            if currIndex==n:
+                if trie.end:
+                    return True
+                else:
+                    continue
+            ch = word[currIndex]
+            if ch == '.':
+                for v in trie.children.values():
+                    curr.append( (v,currIndex+1) )
+            else:
+                result = trie.children.get(ch)
+                if result is not  None:
+                    curr.append( (result,currIndex+1) )
+            # print([ele[1] for ele in curr])
+        return False
+
+
+
+# Your WordDictionary object will be instantiated and called as such:
+# obj = WordDictionary()
+# obj.addWord(word)
+# param_2 = obj.search(word)
