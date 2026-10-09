@@ -1,0 +1,75 @@
+/*
+ * Minimum Insertions to Balance a Parentheses String
+ * Difficulty: Medium
+ * 
+ * Given a parentheses string s containing only the characters '(' and ')'. A parentheses string is balanced if:
+
+
+	Any left parenthesis '(' must have a corresponding two consecutive right parenthesis '))'.
+	Left parenthesis '(' must go before the corresponding two consecutive right parenthesis '))'.
+
+
+In other words, we treat '(' as an opening parenthesis and '))' as a closing parenthesis.
+
+
+	For example, "())", "())(())))" and "(())())))" are balanced, ")()", "()))" and "(()))" are not balanced.
+
+
+You can insert the characters '(' and ')' at any position of the string to balance it if needed.
+
+Return the minimum number of insertions needed to make s balanced.
+
+ 
+Example 1:
+
+Input: s = "(()))"
+Output: 1
+Explanation: The second '(' has two matching '))', but the first '(' has only ')' matching. We need to add one more ')' at the end of the string to be "(())))" which is balanced.
+
+
+Example 2:
+
+Input: s = "())"
+Output: 0
+Explanation: The string is already balanced.
+
+
+Example 3:
+
+Input: s = "))())("
+Output: 3
+Explanation: Add '(' to match the first '))', Add '))' to match the last '('.
+
+
+ 
+Constraints:
+
+
+	1 <= s.length <= 105
+	s consists of '(' and ')' only.
+
+
+ */
+
+class Solution:
+    def minInsertions(self, s: str) -> int:
+        neededClosed = 0
+        change = 0
+        
+        for ch in s:
+            if ch == '(':
+                # If neededClosed is odd, we have a dangling single ')' 
+                # from a previous group that we must fix right now.
+                if neededClosed % 2 != 0:
+                    change += 1
+                    neededClosed -= 1
+                neededClosed += 2
+            elif ch == ')':
+                neededClosed -= 1
+                if neededClosed < 0:
+                    # We encountered a ')' without a matching '('
+                    change += 1
+                    neededClosed += 2
+                    
+        # Any remaining neededClosed at the end must be added as insertions
+        return change + neededClosed
