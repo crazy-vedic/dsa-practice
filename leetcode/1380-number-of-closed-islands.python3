@@ -1,0 +1,148 @@
+/*
+ * Number of Closed Islands
+ * Difficulty: Medium
+ *
+ * Given a 2D grid consists of 0s (land) and 1s (water).  An island is a maximal 4-directionally connected group of 0s and a closed island is an island totally (all left, top, right, bottom) surrounded by 1s.
+
+Return the number of closed islands.
+
+ 
+Example 1:
+
+
+
+Input: grid = [[1,1,1,1,1,1,1,0],[1,0,0,0,0,1,1,0],[1,0,1,0,1,1,1,0],[1,0,0,0,0,1,0,1],[1,1,1,1,1,1,1,0]]
+Output: 2
+Explanation: 
+Islands in gray are closed because they are completely surrounded by water (group of 1s).
+
+Example 2:
+
+
+
+Input: grid = [[0,0,1,0,0],[0,1,0,1,0],[0,1,1,1,0]]
+Output: 1
+
+
+Example 3:
+
+Input: grid = [[1,1,1,1,1,1,1],
+               [1,0,0,0,0,0,1],
+               [1,0,1,1,1,0,1],
+               [1,0,1,0,1,0,1],
+               [1,0,1,1,1,0,1],
+               [1,0,0,0,0,0,1],
+               [1,1,1,1,1,1,1]]
+Output: 2
+
+
+ 
+Constraints:
+
+
+	1 <= grid.length, grid[0].length <= 100
+	0 <= grid[i][j] <=1
+
+
+ */
+
+from collections import defaultdict
+class Solution:
+    def closedIsland(self, grid: list[list[int]]) -> int:
+        parentOf,childrenOf={},defaultdict(set)
+        # i,m row
+        # j,n col
+        m,n = len(grid),len(grid[0])
+        for i in range(m):
+            parentOf[i]=defaultdict(lambda: -1)
+        # TOP RIGHT BOTTOM LEFT
+        def validCardinals(i,j,directions=[ (-1,0), (0,1), (1,0), (0,-1)]):
+            sol = [] # TOP   RIGHT   BOTTOM  LEFT
+            for x,y in directions:
+                tryX,tryY=x+i,y+j
+                if tryX>=0 and tryX<m and tryY>=0 and tryY<n:
+                    sol.append((tryX,tryY,grid[tryX][tryY],parentOf[tryX][tryY]))
+            return sol  
+        def findParent(x,y):
+            par = parentOf[x][y]
+            found=set()
+            if par!=-1: return par
+            options = validCardinals(x,y,[ (-1,0), (0,-1)])
+            for x,y,loc,par in options:
+                if loc==1: continue
+                currSol = findParent(x,y)
+                if currSol!=-1: found.add(currSol)
+            if len(found)==0:
+                return -1
+            elif len(found)==1:
+                return found.pop()
+            else:
+                smol = min(found)
+                print('merging',found,'into',smol)
+                for sol in found:
+                    if sol==smol:continue
+                    solX,solY=sol
+                    parentOf[solX][solY] = smol
+                    childrenOf[smol].update(childrenOf[sol])
+                    for child in childrenOf[sol]:
+                        childX,childY=child
+                        parentOf[childX][childY]=smol
+                    childrenOf[sol]=set()
+                return smol
+        for i in range(m):
+            for j in range(n):
+                curr = (i,j)
+                if grid[i][j]==0:
+                    #land
+                    par = findParent(i,j)
+                    if par == -1:
+                        parentOf[i][j]=curr
+                        childrenOf[curr].add(curr)
+                    else:
+                        childrenOf[par].add(curr)
+                        parentOf[i][j] = par
+                    options = validCardinals(i,j)
+                    for x,y,loc,parent in options:
+                        continue
+                        if loc!=0: continue
+                        if parent != -1 and parent != par:
+                            print('mismatching parents',(i,j),(x,y),'neigh par',parent,'currpar',par,end='')
+                            try:
+                                par = min(parent,par)
+                            except TypeError:
+                                if par==-1:
+                                    par = parent
+                            print('setting to ',par)
+                            childrenOf[par].update((parent,*childrenOf[parent]))
+                            childrenOf[parent]=set()
+                            parentOf[parent[0]][parent[1]]=par
+                        parentOf[x][y]=par
+                        childrenOf[par].add((x,y))
+        
+        # Removal of non watered in groups
+        sol=0
+        d = dict(childrenOf)
+        for k,v in d.items():
+            print(k,':',v)
+            pass
+        for k,v in d.items():
+            if k==-1: continue
+            valid=True
+            for node in v:
+                if not valid: break
+                neighbours = validCardinals(*node)
+                if len(neighbours)<4: 
+                    valid=False
+                    # print('low neighbours for',k)
+                    break
+                for x,y,loc,par in neighbours:
+                    if loc==0:
+                        if par!=k:
+                            raise ValueError(str(par,'mismatch',k,'for',(x,y)))
+                            valid=False
+                            break
+            if valid and len(v)>0: 
+                print(k,v)
+                sol+=1
+        return sol
+
