@@ -1,0 +1,106 @@
+/*
+ * Count Islands With Total Value Divisible by K
+ * Difficulty: Medium
+ *
+ * You are given an m x n matrix grid and a positive integer k. An island is a group of positive integers (representing land) that are 4-directionally connected (horizontally or vertically).
+
+The total value of an island is the sum of the values of all cells in the island.
+
+Return the number of islands with a total value divisible by k.
+
+ 
+Example 1:
+
+
+Input: grid = [[0,2,1,0,0],[0,5,0,0,5],[0,0,1,0,0],[0,1,4,7,0],[0,2,0,0,8]], k = 5
+
+Output: 2
+
+Explanation:
+
+The grid contains four islands. The islands highlighted in blue have a total value that is divisible by 5, while the islands highlighted in red do not.
+
+
+Example 2:
+
+
+Input: grid = [[3,0,3,0], [0,3,0,3], [3,0,3,0]], k = 3
+
+Output: 6
+
+Explanation:
+
+The grid contains six islands, each with a total value that is divisible by 3.
+
+
+ 
+Constraints:
+
+
+	m == grid.length
+	n == grid[i].length
+	1 <= m, n <= 1000
+	1 <= m * n <= 105
+	0 <= grid[i][j] <= 106
+	1 <= k <= 106
+
+
+ */
+
+from collections import defaultdict
+class Solution:
+    def countIslands(self, grid: List[List[int]], key: int) -> int:
+        m,n = len(grid),len(grid[0])
+        parentOf,childrenOf = {},defaultdict(set)
+        for i in range(m):
+            parentOf[i] = defaultdict(lambda: -1)
+
+        def validCardinals(i,j,directions=[ (-1,0), (0,1), (1,0), (0,-1)]):
+            sol = [] # TOP   RIGHT   BOTTOM  LEFT
+            for x,y in directions:
+                tryX,tryY=x+i,y+j
+                if tryX>=0 and tryX<m and tryY>=0 and tryY<n:
+                    sol.append((tryX,tryY,grid[tryX][tryY],parentOf[tryX][tryY]))
+            return sol  
+        def make_set(curr):
+            parentOf[curr[0]][curr[1]] = curr
+            childrenOf[curr].add(curr)
+        def find(x):
+            sols = [parentOf[x[0]][x[1]],-1]
+            attempts = validCardinals(x[0],x[1])
+            while len(attempts)>0:
+                tryX,tryY,loc,par = attempts.pop()
+                if loc: sols.append(par)
+            return sols
+                
+        def union(x,y):
+            if x==y: return x
+            smol = x if len(childrenOf[x])<len(childrenOf[y]) else y
+            big = x if y==smol else y
+            for child in childrenOf[smol]:
+                childX,childY=child
+                parentOf[childX][childY] = big
+            childrenOf[big].update(childrenOf[smol])
+            del childrenOf[smol]
+            return big
+        
+        for i in range(m):
+            for j in range(n):
+                curr = (i,j)
+                if grid[i][j]==0:
+                    continue
+                parents = find(curr)
+                make_set(curr)
+                for parent in parents:
+                    if parent==-1:
+                        pass
+                    else:
+                        curr = union(curr,parent)
+        sol=0
+        for k,v in dict(childrenOf).items():
+            su = sum([ grid[x][y] for x,y in v])
+            print(k,v,su)
+            if su!=0 and su%key==0:
+                sol+=1
+
+        return sol
