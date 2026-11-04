@@ -1,0 +1,193 @@
+/*
+ * Minimum Operations to Make Elements Within K Subarrays Equal
+ * Difficulty: Hard
+ *
+ * You are given an integer array nums and two integers, x and k. You can perform the following operation any number of times (including zero):
+
+
+	Increase or decrease any element of nums by 1.
+
+
+Return the minimum number of operations needed to have at least k non-overlapping subarrays of size exactly x in nums, where all elements within each subarray are equal.
+
+ 
+Example 1:
+
+
+Input: nums = [5,-2,1,3,7,3,6,4,-1], x = 3, k = 2
+
+Output: 8
+
+Explanation:
+
+
+	Use 3 operations to add 3 to nums[1] and use 2 operations to subtract 2 from nums[3]. The resulting array is [5, 1, 1, 1, 7, 3, 6, 4, -1].
+	Use 1 operation to add 1 to nums[5] and use 2 operations to subtract 2 from nums[6]. The resulting array is [5, 1, 1, 1, 7, 4, 4, 4, -1].
+	Now, all elements within each subarray [1, 1, 1] (from indices 1 to 3) and [4, 4, 4] (from indices 5 to 7) are equal. Since 8 total operations were used, 8 is the output.
+
+
+
+Example 2:
+
+
+Input: nums = [9,-2,-2,-2,1,5], x = 2, k = 2
+
+Output: 3
+
+Explanation:
+
+
+	Use 3 operations to subtract 3 from nums[4]. The resulting array is [9, -2, -2, -2, -2, 5].
+	Now, all elements within each subarray [-2, -2] (from indices 1 to 2) and [-2, -2] (from indices 3 to 4) are equal. Since 3 operations were used, 3 is the output.
+
+
+
+ 
+Constraints:
+
+
+	2 <= nums.length <= 105
+	-106 <= nums[i] <= 106
+	2 <= x <= nums.length
+	1 <= k <= 15
+	2 <= k * x <= nums.length
+
+
+ */
+
+import heapq
+from collections import defaultdict
+from functools import lru_cache
+class Solution:
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        # k number of subarrays
+        # x size of subarrays
+        def sliding_window_costs(nums, x):
+            small = []  # Max-heap (store negatives)
+            large = []  # Min-heap
+
+            delayed = defaultdict(int)
+
+            small_size = large_size = 0
+            small_sum = large_sum = 0
+
+            def prune(heap):
+                while heap:
+                    num = -heap[0] if heap is small else heap[0]
+
+                    if delayed[num] == 0:
+                        break
+
+                    delayed[num] -= 1
+                    if delayed[num] == 0:
+                        del delayed[num]
+
+                    heapq.heappop(heap)
+
+            def rebalance():
+                nonlocal small_size, large_size
+                nonlocal small_sum, large_sum
+
+                # small should contain either the same number
+                # of elements as large or one extra element.
+                if small_size > large_size + 1:
+                    prune(small)
+                    num = -heapq.heappop(small)
+
+                    small_size -= 1
+                    large_size += 1
+
+                    small_sum -= num
+                    large_sum += num
+
+                    heapq.heappush(large, num)
+
+                elif small_size < large_size:
+                    prune(large)
+                    num = heapq.heappop(large)
+
+                    large_size -= 1
+                    small_size += 1
+
+                    large_sum -= num
+                    small_sum += num
+
+                    heapq.heappush(small, -num)
+
+            def add(num):
+                nonlocal small_size, large_size
+                nonlocal small_sum, large_sum
+
+                prune(small)
+
+                if not small or num <= -small[0]:
+                    heapq.heappush(small, -num)
+                    small_size += 1
+                    small_sum += num
+                else:
+                    heapq.heappush(large, num)
+                    large_size += 1
+                    large_sum += num
+
+                rebalance()
+
+            def remove(num):
+                nonlocal small_size, large_size
+                nonlocal small_sum, large_sum
+
+                prune(small)
+
+                delayed[num] += 1
+
+                if num <= -small[0]:
+                    small_size -= 1
+                    small_sum -= num
+
+                    if num == -small[0]:
+                        prune(small)
+                else:
+                    large_size -= 1
+                    large_sum -= num
+
+                    if large and num == large[0]:
+                        prune(large)
+
+                rebalance()
+
+            def get_cost():
+                prune(small)
+
+                median = -small[0]
+
+                return (
+                    median * small_size - small_sum
+                    + large_sum - median * large_size
+                )
+
+            result = []
+
+            for i in range(x):
+                add(nums[i])
+
+            result.append(get_cost())
+
+            for i in range(x, len(nums)):
+                remove(nums[i - x])
+                add(nums[i])
+
+                result.append(get_cost())
+
+            return result
+        n=len(nums)
+        state = sliding_window_costs(nums, x)
+        @lru_cache(maxsize=2048)
+        def dp(i,j):
+            #Define dp(i, j) as the minimum cost of selecting j non-overlapping subarrays from state[i:].
+            if j == 0:
+                return 0
+
+            if i >= len(state) or len(state) - i < j:
+                return float('inf')
+
+            return min( dp(i+1,j) , state[i] + dp (i+x,j-1 ) )
+        return dp(0,k)
